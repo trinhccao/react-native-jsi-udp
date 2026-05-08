@@ -100,64 +100,64 @@ std::string error_name(int err) {
   }
 }
 
-int setupIface(int fd, struct sockaddr_in &addr) {
-#if __APPLE__
-  struct ifaddrs *ifaddr, *ifa;
-  if (getifaddrs(&ifaddr) == -1) {
-    return -1;
-  }
-  auto isAny = addr.sin_addr.s_addr == INADDR_ANY;
-  auto isLoopback = addr.sin_addr.s_addr == htonl(INADDR_LOOPBACK);
-  for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-    if (ifa->ifa_addr != NULL && ifa->ifa_addr->sa_family == AF_INET &&
-        !((ifa->ifa_flags & IFF_LOOPBACK) ^ isLoopback) &&
-        (ifa->ifa_flags & IFF_UP) && (ifa->ifa_flags & IFF_RUNNING) &&
-        (isAny || reinterpret_cast<struct sockaddr_in *>(ifa->ifa_addr)
-                          ->sin_addr.s_addr == addr.sin_addr.s_addr)) {
-      auto index = if_nametoindex(ifa->ifa_name);
-      if (setsockopt(fd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index)) != 0) {
-        return -1;
-      }
-      LOGI("bound to %s for %d", ifa->ifa_name, fd);
-      break;
-    }
-  }
-  freeifaddrs(ifaddr);
-#endif
-  return 0;
-}
+// int setupIface(int fd, struct sockaddr_in &addr) {
+// #if __APPLE__
+//   struct ifaddrs *ifaddr, *ifa;
+//   if (getifaddrs(&ifaddr) == -1) {
+//     return -1;
+//   }
+//   auto isAny = addr.sin_addr.s_addr == INADDR_ANY;
+//   auto isLoopback = addr.sin_addr.s_addr == htonl(INADDR_LOOPBACK);
+//   for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+//     if (ifa->ifa_addr != NULL && ifa->ifa_addr->sa_family == AF_INET &&
+//         !((ifa->ifa_flags & IFF_LOOPBACK) ^ isLoopback) &&
+//         (ifa->ifa_flags & IFF_UP) && (ifa->ifa_flags & IFF_RUNNING) &&
+//         (isAny || reinterpret_cast<struct sockaddr_in *>(ifa->ifa_addr)
+//                           ->sin_addr.s_addr == addr.sin_addr.s_addr)) {
+//       auto index = if_nametoindex(ifa->ifa_name);
+//       if (setsockopt(fd, IPPROTO_IP, IP_BOUND_IF, &index, sizeof(index)) != 0) {
+//         return -1;
+//       }
+//       LOGI("bound to %s for %d", ifa->ifa_name, fd);
+//       break;
+//     }
+//   }
+//   freeifaddrs(ifaddr);
+// #endif
+//   return 0;
+// }
 
-int setupIface(int fd, struct sockaddr_in6 &addr) {
-#if __APPLE__
-  struct ifaddrs *ifaddr, *ifa;
-  if (getifaddrs(&ifaddr) == -1) {
-    return -1;
-  }
-  auto size = sizeof(addr);
-  auto isAny = memcmp(&(addr.sin6_addr), &in6addr_any, size) == 0;
-  auto isLoopback = memcmp(&(addr.sin6_addr), &in6addr_loopback, size) == 0;
-  for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-    if (ifa->ifa_addr != NULL && ifa->ifa_addr->sa_family == AF_INET6 &&
-        !((ifa->ifa_flags & IFF_LOOPBACK) ^ isLoopback) &&
-        (ifa->ifa_flags & IFF_UP) && (ifa->ifa_flags & IFF_RUNNING) &&
-        (isAny ||
-         memcmp(&(addr.sin6_addr),
-                &(reinterpret_cast<struct sockaddr_in6 *>(ifa->ifa_addr)
-                      ->sin6_addr),
-                size) == 0)) {
-      auto index = if_nametoindex(ifa->ifa_name);
-      if (setsockopt(fd, IPPROTO_IPV6, IPV6_BOUND_IF, &index, sizeof(index)) !=
-          0) {
-        return -1;
-      }
-      LOGI("bound to %s for %d", ifa->ifa_name, fd);
-      break;
-    }
-  }
-  freeifaddrs(ifaddr);
-#endif
-  return 0;
-}
+// int setupIface(int fd, struct sockaddr_in6 &addr) {
+// #if __APPLE__
+//   struct ifaddrs *ifaddr, *ifa;
+//   if (getifaddrs(&ifaddr) == -1) {
+//     return -1;
+//   }
+//   auto size = sizeof(addr);
+//   auto isAny = memcmp(&(addr.sin6_addr), &in6addr_any, size) == 0;
+//   auto isLoopback = memcmp(&(addr.sin6_addr), &in6addr_loopback, size) == 0;
+//   for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+//     if (ifa->ifa_addr != NULL && ifa->ifa_addr->sa_family == AF_INET6 &&
+//         !((ifa->ifa_flags & IFF_LOOPBACK) ^ isLoopback) &&
+//         (ifa->ifa_flags & IFF_UP) && (ifa->ifa_flags & IFF_RUNNING) &&
+//         (isAny ||
+//          memcmp(&(addr.sin6_addr),
+//                 &(reinterpret_cast<struct sockaddr_in6 *>(ifa->ifa_addr)
+//                       ->sin6_addr),
+//                 size) == 0)) {
+//       auto index = if_nametoindex(ifa->ifa_name);
+//       if (setsockopt(fd, IPPROTO_IPV6, IPV6_BOUND_IF, &index, sizeof(index)) !=
+//           0) {
+//         return -1;
+//       }
+//       LOGI("bound to %s for %d", ifa->ifa_name, fd);
+//       break;
+//     }
+//   }
+//   freeifaddrs(ifaddr);
+// #endif
+//   return 0;
+// }
 
 UdpManager::UdpManager(Runtime *jsiRuntime,
                        std::shared_ptr<CallInvoker> callInvoker)
@@ -393,26 +393,26 @@ JSI_HOST_FUNCTION(UdpManager::bind) {
 
   long ret = 0;
   if (type == 4) {
-    struct sockaddr_in addr;
+    struct sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
     ret = inet_pton(AF_INET, host.c_str(), &(addr.sin_addr));
     if (ret == 1) {
-      if (setupIface(fd, addr) != 0) {
-        throw JSError(runtime, error_name(errno));
-      }
+      // if (setupIface(fd, addr) != 0) {
+      //   throw JSError(runtime, error_name(errno));
+      // }
       ret =
           ::bind(fd, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));
     }
   } else {
-    struct sockaddr_in6 addr;
+    struct sockaddr_in6 addr{};
     addr.sin6_family = AF_INET6;
     addr.sin6_port = htons(port);
     ret = inet_pton(AF_INET6, host.c_str(), &(addr.sin6_addr));
     if (ret == 1) {
-      if (setupIface(fd, addr) != 0) {
-        throw JSError(runtime, error_name(errno));
-      }
+      // if (setupIface(fd, addr) != 0) {
+      //   throw JSError(runtime, error_name(errno));
+      // }
       ret =
           ::bind(fd, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));
     }
@@ -547,8 +547,8 @@ JSI_HOST_FUNCTION(UdpManager::send) {
   auto port = static_cast<int>(arguments[3].asNumber());
   auto data = arguments[4].asObject(runtime).getArrayBuffer(runtime);
 
-  struct sockaddr_in addr4;
-  struct sockaddr_in6 addr6;
+  struct sockaddr_in addr4{};
+  struct sockaddr_in6 addr6{};
   struct sockaddr *addrPtr;
   socklen_t addrLen;
 
@@ -570,7 +570,7 @@ JSI_HOST_FUNCTION(UdpManager::send) {
     addrLen = sizeof(addr6);
   }
 
-  auto ret = sendto(fd, data.data(runtime), data.size(runtime), MSG_DONTWAIT,
+  auto ret = sendto(fd, data.data(runtime), data.size(runtime), 0,
                     addrPtr, addrLen);
 
   if (ret < 0 && errno != EWOULDBLOCK && errno != EAGAIN) {
@@ -587,7 +587,7 @@ JSI_HOST_FUNCTION(UdpManager::getSockName) {
 
   auto result = Object(runtime);
   if (type == 4) {
-    struct sockaddr_in addr;
+    struct sockaddr_in addr{};
     socklen_t len = sizeof(addr);
     auto ret = getsockname(fd, (struct sockaddr *)&addr, &len);
     if (ret < 0) {
@@ -601,7 +601,7 @@ JSI_HOST_FUNCTION(UdpManager::getSockName) {
     result.setProperty(runtime, "family",
                        String::createFromAscii(runtime, "IPv4"));
   } else {
-    struct sockaddr_in6 addr;
+    struct sockaddr_in6 addr{};
     socklen_t len = sizeof(addr);
     auto ret = getsockname(fd, (struct sockaddr *)&addr, &len);
     if (ret < 0) {
@@ -815,13 +815,12 @@ void UdpManager::resumeAll() {
     }
 
     if (state.type == 4) {
-      struct sockaddr_in addr;
+      struct sockaddr_in addr{};
       addr.sin_family = AF_INET;
       addr.sin_port = htons(state.port);
       inet_pton(AF_INET, state.address.c_str(), &(addr.sin_addr));
 
-      if (setupIface(newFd, addr) == 0 &&
-          ::bind(newFd, reinterpret_cast<struct sockaddr *>(&addr),
+      if (::bind(newFd, reinterpret_cast<struct sockaddr *>(&addr),
                  sizeof(addr)) == 0) {
         reopenedSockets.emplace_back(state.id, newFd);
       } else {
@@ -830,13 +829,12 @@ void UdpManager::resumeAll() {
         ::close(newFd);
       }
     } else {
-      struct sockaddr_in6 addr;
+      struct sockaddr_in6 addr{};
       addr.sin6_family = AF_INET6;
       addr.sin6_port = htons(state.port);
       inet_pton(AF_INET6, state.address.c_str(), &(addr.sin6_addr));
 
-      if (setupIface(newFd, addr) == 0 &&
-          ::bind(newFd, reinterpret_cast<struct sockaddr *>(&addr),
+      if (::bind(newFd, reinterpret_cast<struct sockaddr *>(&addr),
                  sizeof(addr)) == 0) {
         reopenedSockets.emplace_back(state.id, newFd);
       } else {
